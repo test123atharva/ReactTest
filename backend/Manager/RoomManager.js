@@ -1,22 +1,27 @@
 import { Room } from "./Room"
 
 export class RoomManager{
-    constructor(){
+  constructor(){
+    this.Rooms = []
 
-        this.rooms = []
-        this.lobby = []
-        
-        
 
-    }
+  }
 
-    addRoom(Room){
+  createRoom(user){
+    //create room object 
+    //return unique room id 
 
-        this.rooms
+    const currId = uuid.v4()
+    const currRoom = new Room(currId)
+    this.Rooms.push(currRoom)
+    currRoom.addUser(user)
+    return currId
 
-    }
-    removeRoom(Room){
+  }
 
-    }
+  deleteRoom(roomId){
+    const currRoom = this.Rooms.findIndex((i)=> i.roomId == roomId)
+    // disconnect members of the room then delete it 
+    this.Rooms.splice(currRoom,1)
+  }
 }
-

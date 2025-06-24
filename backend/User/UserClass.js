@@ -1,25 +1,19 @@
-import { SendSystemMessage } from "../Helpers/HelpersGeneral"
-
+const uuid = require('uuid')
 export class User{
-    constructor(username , id , ws , pos=[0,0]){
 
-        this.username = username
-        this.id = id
-        this.ws = ws 
-        this.pos = [0,0]
+  constructor( ws){
 
-    }
+    const currId = uuid.v4()
+    this.userID = userID
+    this.ws = ws 
+    this.pos = [0,0]
+  }
+
+  updatePos(x,y){
+    this.pos = [x,y];
+    console.log(`updated pos ${x +" "+ y}`);
+  }
 
 
- 
 
-    updatePos(x,y){
-
-        this.pos(x,y)
-        
-    }
-
-    sendMessage(msg){
-        SendSystemMessage(msg,this.ws , system)
-    }
 }
