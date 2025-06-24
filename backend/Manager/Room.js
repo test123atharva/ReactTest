@@ -1,27 +1,37 @@
-export class Room {
+class Room {
   constructor(roomId) {
     this.roomId = roomId;
     this.participants = [];
   }
 
-  //object of the user class
   addUser(user) {
     this.participants.push(user);
   }
 
   removeUser(user) {
-    const currId = user.id;
-    const index = this.participants.findIndex((p) => p.id === currId);
-
+    const index = this.participants.findIndex((p) => p.userID === user.userID);
     if (index !== -1) {
       this.participants.splice(index, 1);
     }
   }
 
-  broadCastPositions(x,y){
-    this.participants.map((i)=>{
-      i.updatePos(x,y)
-    })
-  }
+  broadcastAllPositions() {
+    const allPositions = this.participants.map((p) => ({
+      userID: p.userID,
+      pos: p.pos,
+    }));
 
+    const payload = JSON.stringify({
+      type: "positionsUpdate",
+      positions: allPositions,
+    });
+
+    this.participants.forEach((p) => {
+      if (p.ws.readyState === p.ws.OPEN) {
+        p.ws.send(payload);
+      }
+    });
+  }
 }
+
+module.exports = { Room };

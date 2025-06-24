@@ -1,55 +1,69 @@
 const express = require("express");
-const { WebSocketServer, CLOSING } = require("ws");
+const { WebSocketServer } = require("ws");
 const { RoomManager } = require("./Manager/RoomManager");
 const { User } = require("./User/UserClass");
-const { Room } = require("./Manager/Room");
 
 const PORT = 5000;
 const app = express();
 app.use(express.json());
 
 const server = app.listen(PORT, () => {
-  console.log(`running on ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 const wss = new WebSocketServer({ server });
-
-// no metadata for create Room type msg
-// roomId for joinroom type msg
-
 const roomManager = new RoomManager();
+
 wss.on("connection", (ws) => {
+  const currUser = new User(ws);
+  let currentRoom = null;
+
   ws.on("message", (data) => {
-    const currData = JSON.parse(data);
-
-    if (currData.type == "create") {
-      //create  user
-      //create room
-      const currUser = new User(ws);
-
-      const currRoomId = roomManager.createRoom(currUser);
-      console.log(`room created with id ${currRoomId}`)
-
-      // send roomId to the user
+    let currData;
+    try {
+      currData = JSON.parse(data);
+    } catch {
+      return ws.send(
+        JSON.stringify({ type: "error", message: "Invalid JSON" })
+      );
     }
-    if (currData.type == "join") {
-      //create user
-      // join room
-    
-      const currUser = new User(ws);
-      const currRoomId = currData.roomId
-      const currRoomIdx = roomManager.Rooms.findIndex((i)=> i.roomId == currRoomId)
-      const currRoom = roomManager.Rooms[currRoomIdx]
-      currRoom.createRoom()
 
+    switch (currData.type) {
+      case "create": {
+        const roomId = roomManager.createRoom(currUser);
+        currentRoom = roomManager.getRoom(roomId);
+        ws.send(JSON.stringify({ type: "roomCreated", roomId }));
+        break;
+      }
 
-    }
-    if (currData.type == "updatePos") {
-      //broadcast pos in room
+      case "join": {
+        const room = roomManager.getRoom(currData.roomId);
+        if (room) {
+          room.addUser(currUser);
+          currentRoom = room;
+          ws.send(JSON.stringify({ type: "roomJoined", roomId: room.roomId }));
+          room.broadcastAllPositions();
+        } else {
+          ws.send(JSON.stringify({ type: "error", message: "Room not found" }));
+        }
+        break;
+      }
+
+      case "updatePos": {
+        const [x, y] = currData.pos;
+        currUser.updatePos(x, y);
+        if (currentRoom) {
+          currentRoom.broadcastAllPositions();
+        }
+        break;
+      }
+
+      default:
+        ws.send(
+          JSON.stringify({ type: "error", message: "Unknown message type" })
+        );
     }
   });
 
-  ws.send("connected");
+  ws.send(JSON.stringify({ type: "connected" }));
 });
-
-function main(ws) {}

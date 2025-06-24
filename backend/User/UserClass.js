@@ -1,19 +1,21 @@
-const uuid = require('uuid')
-export class User{
+const { v4: uuidv4 } = require("uuid");
 
-  constructor( ws){
-
-    const currId = uuid.v4()
-    this.userID = userID
-    this.ws = ws 
-    this.pos = [0,0]
+class User {
+  constructor(ws) {
+    this.userID = uuidv4();
+    this.ws = ws;
+    this.pos = [0, 0];
   }
 
-  updatePos(x,y){
-    this.pos = [x,y];
-    console.log(`updated pos ${x +" "+ y}`);
+  updatePos(x, y) {
+    this.pos = [x, y];
   }
 
-
-
+  send(message) {
+    if (this.ws.readyState === this.ws.OPEN) {
+      this.ws.send(message);
+    }
+  }
 }
+
+module.exports = { User };
